@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#b2babb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vulcan0">
+  
+  <title>Vulcan0</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Iconos para diferentes dispositivos -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
+  <style>
+    @font-face {
+      font-family: 'WW Digital';
+      src: url('data:font/truetype;base64,') format('truetype');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Molot';
+      src: url('data:font/opentype;base64,') format('opentype');
+      font-display: swap;
+    }
+    
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background: #b2babb;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 10px;
+      box-sizing: border-box;
+      touch-action: manipulation;
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .battery {
+      display: flex;
+      flex-direction: column-reverse;
+      height: min(450px, 60vh);
+      width: min(200px, 50vw);
+      border: 10px solid #1f1f1f;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: #000;
+      box-shadow: 0 0 10px #444;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+
+    .battery-tip {
+      width: min(150px, 40vw);
+      height: 50px;
+      background: #000;
+      margin-bottom: 5px;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: clamp(20px, 8vw, 35px);
+      color: #ff0000;
+      border: 5px solid #1f1f1f;
+      box-shadow: 0 0 10px #444, 0 0 0 10px #000;
+      font-family: 'WW Digital', monospace;
+      letter-spacing: 3px;
+    }
+
+    .cell {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
+      font-size: clamp(16px, 5vw, 20px);
+      font-weight: bold;
+      color: white;
+      background: #d6eaf8;
+      margin: 2px 0;
+      border-radius: 4px;
+      border-top: 2px solid #003366;
+      border-bottom: 2px solid #000e1a;
+    }
+
+    .fill {
+      width: 100%;
+      height: 0%;
+      transition: height 1s ease-in-out;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    .label {
+      z-index: 1;
+      position: relative;
+      text-shadow: 0 0 2px #000, 1px 1px 2px #000;
+    }
+
+    .buttons {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    button {
+      padding: 12px 30px;
+      font-size: clamp(16px, 4vw, 20px);
+      cursor: pointer;
+      border: none;
+      outline: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      min-height: 44px; /* Tamaño mínimo para touch */
+      min-width: 44px;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    button[onclick="resetBattery()"] {
+      border: 6px solid #000;
+      border-radius: 12px;
+      font-family: 'Molot', Arial, sans-serif;
+      background-color: #00FF00;
+      color: #000;
+      font-size: clamp(18px, 5vw, 24px);
+      padding: 15px 40px;
+    }
+
+    .control-buttons {
+      display: flex;
+      gap: 15px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    #heatBtn, #coldBtn {
+      opacity: 0.9;
+      font-size: clamp(12px, 3vw, 16px);
+      color: white;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    #heatBtn {
+      background-color: #ff4444;
+    }
+
+    #coldBtn {
+      background-color: #4444ff;
+    }
+
+    #heatBtn:active {
+      background-color: #ff0000;
+    }
+
+    #coldBtn:active {
+      background-color: #0000ff;
+    }
+
+    /* Prevenir zoom en iOS */
+    input, select, textarea, button {
+      font-size: 16px;
+    }
+
+    /* Estilo para pantalla completa */
+    @media (display-mode: standalone) {
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+
+    /* Orientación landscape en móviles */
+    @media (orientation: landscape) and (max-height: 500px) {
+      body {
+        flex-direction: row;
+        gap: 20px;
+      }
+      
+      .battery {
+        height: 80vh;
+        width: 150px;
+      }
+      
+      .battery-tip {
+        width: 120px;
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="battery-tip" id="tip">00d:00h</div>
+    <div class="battery" id="battery"></div>
+    <div class="buttons">
+      <button onclick="resetBattery()">EyectuM</button>
+      <div class="control-buttons">
+        <button id="heatBtn">Heat 🔥</button>
+        <button id="coldBtn">Cold ❄️</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => console.log('SW registered'))
+          .catch(error => console.log('SW registration failed'));
+      });
+    }
+
+    // Constantes
+    const colors = ["#1ca9e3", "#88cc88", "#f7dc6f", "#ffa500", "#ff33d7", "#800080", "#ff0000"];
+    const HOUR = 3600000; // 1 hora en milisegundos
+    const DAY = HOUR * 24; // 1 día en milisegundos
+    const STORAGE_KEY = "vulcanBatteryStartTime";
+
+    // Elementos DOM
+    const battery = document.getElementById("battery");
+    const tip = document.getElementById("tip");
+    const heatBtn = document.getElementById("heatBtn");
+    const coldBtn = document.getElementById("coldBtn");
+
+    // Variables de estado
+    let startTime = null;
+    let simulateInterval = null;
+    let reverseInterval = null;
+
+    // Inicialización
+    function init() {
+      createBattery();
+      loadStartTime();
+      updateBattery();
+      setInterval(updateBattery, 60000);
+      setupEventListeners();
+      
+      // Detectar cuando la app vuelve a estar visible
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) updateBattery();
+      });
+
+      // Prevenir comportamientos de navegador
+      document.addEventListener('contextmenu', e => e.preventDefault());
+      document.addEventListener('selectstart', e => e.preventDefault());
+    }
+
+    function createBattery() {
+      battery.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        const fill = document.createElement("div");
+        fill.className = "fill";
+        fill.style.backgroundColor = colors[i];
+        fill.style.height = "0%";
+
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = i + 1;
+
+        cell.appendChild(fill);
+        cell.appendChild(label);
+        battery.appendChild(cell);
+      }
+    }
+
+    function loadStartTime() {
+      const savedStartTime = localStorage.getItem(STORAGE_KEY);
+      
+      if (savedStartTime) {
+        startTime = parseInt(savedStartTime, 10);
+        
+        if (isNaN(startTime)) {
+          console.error("Tiempo de inicio inválido en almacenamiento, reiniciando...");
+          resetBattery();
+        }
+      } else {
+        resetBattery();
+      }
+    }
+
+    function saveStartTime() {
+      if (startTime) {
+        localStorage.setItem(STORAGE_KEY, startTime.toString());
+      }
+    }
+
+    function updateBattery() {
+      if (!startTime) return;
+
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const fills = document.querySelectorAll(".fill");
+
+      for (let i = 0; i < fills.length; i++) {
+        const dayElapsed = elapsed - (i * DAY);
+        
+        if (dayElapsed >= 0 && dayElapsed <= DAY) {
+          fills[i].style.height = `${Math.min(100, (dayElapsed / DAY) * 100)}%`;
+        } else if (dayElapsed > DAY) {
+          fills[i].style.height = "100%";
+        } else {
+          fills[i].style.height = "0%";
+        }
+      }
+
+      const days = Math.floor(elapsed / DAY).toString().padStart(2, '0');
+      const hours = Math.floor((elapsed % DAY) / HOUR).toString().padStart(2, '0');
+      tip.textContent = `${days}d:${hours}h`;
+    }
+
+    function resetBattery() {
+      startTime = Date.now();
+      saveStartTime();
+      updateBattery();
+    }
+
+    function simulateHour() {
+      if (!startTime) resetBattery();
+      startTime -= HOUR;
+      saveStartTime();
+      updateBattery();
+    }
+
+    function reverseHour() {
+      if (!startTime) resetBattery();
+      startTime += HOUR;
+      saveStartTime();
+      updateBattery();
+    }
+
+    function setupEventListeners() {
+      // Soporte para touch y mouse
+      function addButtonEvents(btn, action) {
+        let interval;
+        
+        function start() {
+          action();
+          interval = setInterval(action, 200);
+        }
+        
+        function stop() {
+          clearInterval(interval);
+        }
+        
+        // Mouse events
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('mouseup', stop);
+        btn.addEventListener('mouseleave', stop);
+        
+        // Touch events
+        btn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          start();
+        });
+        btn.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          stop();
+        });
+        btn.addEventListener('touchcancel', stop);
+      }
+      
+      addButtonEvents(heatBtn, simulateHour);
+      addButtonEvents(coldBtn, reverseHour);
+    }
+
+    // Manejar instalación de PWA
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Aquí podrías mostrar un botón de instalación personalizado
+    });
+
+    // Iniciar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
