@@ -2,7 +2,7 @@
   "name": "Vulcan0 Battery Monitor",
   "short_name": "Vulcan0",
   "description": "Monitor de batería con contador de días y horas",
-  "start_url": "./",
+  "start_url": "https://pomver.github.io/vulcano/",
   "display": "standalone",
   "background_color": "#b2babb",
   "theme_color": "#b2babb",
