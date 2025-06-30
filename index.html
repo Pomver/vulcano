@@ -12,12 +12,11 @@
   <title>Vulcan0</title>
   
   <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="./manifest.json">
   
-  <!-- Iconos para diferentes dispositivos -->
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <!-- Iconos inline usando SVG base64 -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjYjJiYWJiIi8+Cjx0ZXh0IHg9Ijk2IiB5PSIxMTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0OCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMwMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlYwPC90ZXh0Pgo8L3N2Zz4K">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjYjJiYWJiIi8+Cjx0ZXh0IHg9Ijk2IiB5PSIxMTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0OCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMwMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlYwPC90ZXh0Pgo8L3N2Zz4K">
   
   <style>
     @font-face {
@@ -27,7 +26,7 @@
     }
     @font-face {
       font-family: 'Molot';
-      src: url('data:font/opentype;base64,') format('opentype');
+      src: url('data:font/opentype;base64,') format('opentype'); 
       font-display: swap;
     }
     
@@ -93,7 +92,7 @@
       color: #ff0000;
       border: 5px solid #1f1f1f;
       box-shadow: 0 0 10px #444, 0 0 0 10px #000;
-      font-family: 'WW Digital', monospace;
+      font-family: 'WW Digital', 'Courier New', monospace;
       letter-spacing: 3px;
     }
 
@@ -150,7 +149,7 @@
       border-radius: 8px;
       font-weight: bold;
       transition: all 0.2s ease;
-      min-height: 44px; /* Tamaño mínimo para touch */
+      min-height: 44px;
       min-width: 44px;
     }
 
@@ -245,14 +244,13 @@
   </div>
 
   <script>
-    // Registrar Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(registration => console.log('SW registered'))
-          .catch(error => console.log('SW registration failed'));
-      });
-    }
+    // PWA Install Handler
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Opcionalmente mostrar botón de instalación personalizado
+    });
 
     // Constantes
     const colors = ["#1ca9e3", "#88cc88", "#f7dc6f", "#ffa500", "#ff33d7", "#800080", "#ff0000"];
@@ -287,6 +285,11 @@
       // Prevenir comportamientos de navegador
       document.addEventListener('contextmenu', e => e.preventDefault());
       document.addEventListener('selectstart', e => e.preventDefault());
+      
+      // Manejar el evento de instalación
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA instalada correctamente');
+      });
     }
 
     function createBattery() {
@@ -311,23 +314,32 @@
     }
 
     function loadStartTime() {
-      const savedStartTime = localStorage.getItem(STORAGE_KEY);
-      
-      if (savedStartTime) {
-        startTime = parseInt(savedStartTime, 10);
+      try {
+        const savedStartTime = localStorage.getItem(STORAGE_KEY);
         
-        if (isNaN(startTime)) {
-          console.error("Tiempo de inicio inválido en almacenamiento, reiniciando...");
+        if (savedStartTime) {
+          startTime = parseInt(savedStartTime, 10);
+          
+          if (isNaN(startTime)) {
+            console.error("Tiempo de inicio inválido en almacenamiento, reiniciando...");
+            resetBattery();
+          }
+        } else {
           resetBattery();
         }
-      } else {
+      } catch (error) {
+        console.error("Error al cargar desde localStorage:", error);
         resetBattery();
       }
     }
 
     function saveStartTime() {
-      if (startTime) {
-        localStorage.setItem(STORAGE_KEY, startTime.toString());
+      try {
+        if (startTime) {
+          localStorage.setItem(STORAGE_KEY, startTime.toString());
+        }
+      } catch (error) {
+        console.error("Error al guardar en localStorage:", error);
       }
     }
 
@@ -409,14 +421,6 @@
       addButtonEvents(heatBtn, simulateHour);
       addButtonEvents(coldBtn, reverseHour);
     }
-
-    // Manejar instalación de PWA
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      // Aquí podrías mostrar un botón de instalación personalizado
-    });
 
     // Iniciar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', init);
